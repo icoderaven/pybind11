@@ -5,7 +5,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.11)
 
 if (POLICY CMP0048)
   # cmake warns if loaded from a min-3.0-required parent dir, so silence the warning:
@@ -24,6 +24,10 @@ set(PYBIND11_MASTER_PROJECT OFF)
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(PYBIND11_MASTER_PROJECT ON)
 endif()
+if(NOT PYBIND11_EXPORT_NAME)
+  set(PYBIND11_EXPORT_NAME "${PROJECT_NAME}Targets")
+endif()
+message(STATUS "[pybind11]:: Export name is ${PYBIND11_EXPORT_NAME}")
 
 option(PYBIND11_INSTALL "Install pybind11 header files?" ${PYBIND11_MASTER_PROJECT})
 option(PYBIND11_TEST    "Build pybind11 test suite?"     ${PYBIND11_MASTER_PROJECT})
@@ -120,6 +124,7 @@ if(NOT (CMAKE_VERSION VERSION_LESS 3.0))  # CMake >= 3.0
 endif()
 
 if (PYBIND11_INSTALL)
+  message(STATUS "[pybind11]:: Installing pybind11")
   install(DIRECTORY ${PYBIND11_INCLUDE_DIR}/pybind11 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
   set(PYBIND11_CMAKECONFIG_INSTALL_DIR "share/cmake/${PROJECT_NAME}" CACHE STRING "install path for pybind11Config.cmake")
@@ -140,18 +145,10 @@ if (PYBIND11_INSTALL)
                 tools/FindPythonLibsNew.cmake
                 tools/pybind11Tools.cmake
           DESTINATION ${PYBIND11_CMAKECONFIG_INSTALL_DIR})
+  install(TARGETS pybind11 module embed
+          EXPORT "${PYBIND11_EXPORT_NAME}")
 
-  if(NOT (CMAKE_VERSION VERSION_LESS 3.0))
-    if(NOT PYBIND11_EXPORT_NAME)
-      set(PYBIND11_EXPORT_NAME "${PROJECT_NAME}Targets")
-    endif()
-
-    install(TARGETS pybind11 module embed
-            EXPORT "${PYBIND11_EXPORT_NAME}")
-
-    install(EXPORT "${PYBIND11_EXPORT_NAME}"
-            NAMESPACE "${PROJECT_NAME}::"
-            DESTINATION ${PYBIND11_CMAKECONFIG_INSTALL_DIR})
-
-  endif()
+  install(EXPORT "${PYBIND11_EXPORT_NAME}"
+          NAMESPACE "${PROJECT_NAME}::"
+          DESTINATION ${PYBIND11_CMAKECONFIG_INSTALL_DIR})
 endif()
